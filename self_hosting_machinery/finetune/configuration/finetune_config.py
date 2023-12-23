@@ -236,12 +236,14 @@ class ConfigBuilder:
             (15000, 30000): 10,
             (30000, 100000000): 3
         }
-        epochs = 1
-        for (lhs_dslen, rhs_dslen), e in dslen_per_epochs.items():
-            if lhs_dslen <= ds_len < rhs_dslen:
-                epochs = e
-                break
-
+        epochs = next(
+            (
+                e
+                for (lhs_dslen, rhs_dslen), e in dslen_per_epochs.items()
+                if lhs_dslen <= ds_len < rhs_dslen
+            ),
+            1,
+        )
         effective_iters = max(epochs * (ds_len / self.cfg['train_batch_size']), min_iterations)
         effective_iters = int(math.ceil(effective_iters / round_to_iter) * round_to_iter)
         self.cfg['scheduler']['params']['total_num_steps'] = self.cfg['train_iters'] = effective_iters

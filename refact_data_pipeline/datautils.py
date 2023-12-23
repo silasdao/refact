@@ -41,7 +41,7 @@ def _after_collate(result: Dict[str, th.Tensor]) -> Dict[str, th.Tensor]:
 def collate_fn(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     output = defaultdict(list)
     last_stats = None
-    for idx, record in enumerate(records):
+    for record in records:
         for k, v in record.items():
             if k == "stats":
                 last_stats = v
@@ -61,7 +61,7 @@ def data_parallel_split_and_collate_fn(records: List[Dict[str, Any]]) -> Dict[st
 
     output = defaultdict(list)
     last_stats = None
-    for idx, record in enumerate(records):
+    for record in records:
         for k, v in record.items():
             if k == "stats":
                 last_stats = v
@@ -69,7 +69,7 @@ def data_parallel_split_and_collate_fn(records: List[Dict[str, Any]]) -> Dict[st
             output[k].append(
                 th.tensor(record[k], dtype=_prefer_dtypes.get(k, th.int64))
             )
-    assert len(records) % world_size == 0, "effective batch size %s" % len(records)
+    assert len(records) % world_size == 0, f"effective batch size {len(records)}"
     effective_bs = len(records) // world_size
     from_, to = rank * effective_bs, (rank + 1) * effective_bs
     return _after_collate({
@@ -98,7 +98,7 @@ def read_and_collate(
         if log_stats:
             for sk, sv in rec["stats"].items():
                 if isinstance(sv, (float, int)) and not sk.startswith("restart"):
-                    progress_callback("ds/%s" % sk, sv)
+                    progress_callback(f"ds/{sk}", sv)
         for k, v in rec.items():
             if k == "stats":
                 for sk, sv in v.items():
@@ -106,13 +106,10 @@ def read_and_collate(
                         cold_restart_dict[sk] = sv
                 continue
             output[k].append(th.tensor(rec[k], dtype=str2dtype(prefer_dtypes.get(k, "torch.int64"))))
-    lens = []
-    for k in output:
-        if k != "stats":
-            lens.append(len(output[k]))
-    if len(output) > 0:
+    lens = [len(v_) for k, v_ in output.items() if k != "stats"]
+    if output:
         len0 = lens[0]
-        assert all(l == len0 for l in lens), "all lengths must be equal %s" % lens
+        assert all(l == len0 for l in lens), f"all lengths must be equal {lens}"
     return (
         {k: th.stack(v).to(device) for k, v in output.items()},
         rec["stats"] if rec is not None else {},

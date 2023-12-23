@@ -35,7 +35,7 @@ class Hdf5Dataset:
     ):
         files = [_try_open(p) for p in files]
         files = [f for f in files if f is not None]
-        assert len(files) > 0
+        assert files
         self.files = files
         self.tables = [file.root.data for file in self.files]
         self.keys = dataopts.get("keys", "tokens;mask").split(';')

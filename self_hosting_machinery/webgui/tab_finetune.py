@@ -129,8 +129,7 @@ class TabFinetuneRouter(APIRouter):
         try:
             with open(env.CONFIG_PROCESSING_STATS, "r") as file:
                 scan_stats = json.load(file)
-                scan_stats_status = scan_stats.get("scan_finished")
-                return scan_stats_status
+                return scan_stats.get("scan_finished")
         except FileNotFoundError:
             return False
         except json.JSONDecodeError:
@@ -173,9 +172,9 @@ class TabFinetuneRouter(APIRouter):
         for dkey, dval in finetune_filtering_defaults.items():
             if dkey in validated and (validated[dkey] == dval or validated[dkey] is None):
                 del validated[dkey]
-        with open(env.CONFIG_HOW_TO_FILTER + ".tmp", "w") as f:
+        with open(f"{env.CONFIG_HOW_TO_FILTER}.tmp", "w") as f:
             json.dump(post.dict(), f, indent=4)
-        os.rename(env.CONFIG_HOW_TO_FILTER + ".tmp", env.CONFIG_HOW_TO_FILTER)
+        os.rename(f"{env.CONFIG_HOW_TO_FILTER}.tmp", env.CONFIG_HOW_TO_FILTER)
         return JSONResponse("OK")
 
     async def _tab_finetune_smart_filter_get(self):
@@ -192,9 +191,9 @@ class TabFinetuneRouter(APIRouter):
         for dkey, dval in finetune_train_defaults.items():
             if dkey in validated and (validated[dkey] == dval or validated[dkey] is None):
                 del validated[dkey]
-        with open(env.CONFIG_FINETUNE + ".tmp", "w") as f:
+        with open(f"{env.CONFIG_FINETUNE}.tmp", "w") as f:
             json.dump(validated, f, indent=4)
-        os.rename(env.CONFIG_FINETUNE + ".tmp", env.CONFIG_FINETUNE)
+        os.rename(f"{env.CONFIG_FINETUNE}.tmp", env.CONFIG_FINETUNE)
         return JSONResponse("OK")
 
     async def _tab_finetune_training_get(self):
@@ -208,7 +207,7 @@ class TabFinetuneRouter(APIRouter):
         sanitize_run_id(run_id)
         log_path = os.path.join(env.DIR_LORAS, run_id, "log.txt")
         if not os.path.isfile(log_path):
-            return Response("File '%s' not found" % log_path, status_code=404)
+            return Response(f"File '{log_path}' not found", status_code=404)
         return StreamingResponse(
             stream_text_file(log_path),
             media_type="text/event-stream"
@@ -233,8 +232,10 @@ class TabFinetuneRouter(APIRouter):
         if os.path.exists(svg_path):
             svg = open(svg_path, "r").read()
         else:
-            svg = '<svg width="432" height="217" viewBox="0 0 432 217" fill="none" xmlns="http://www.w3.org/2000/svg">'
-            svg += '<line x1="50" y1="10.496" x2="350" y2="10.496" stroke="#EFEFEF"/>'
+            svg = (
+                '<svg width="432" height="217" viewBox="0 0 432 217" fill="none" xmlns="http://www.w3.org/2000/svg">'
+                + '<line x1="50" y1="10.496" x2="350" y2="10.496" stroke="#EFEFEF"/>'
+            )
             svg += '<line x1="50" y1="200.496" x2="350" y2="200.496" stroke="#EFEFEF"/>'
             svg += '<line x1="50" y1="162.496" x2="350" y2="162.496" stroke="#EFEFEF"/>'
             svg += '<line x1="50" y1="124.496" x2="350" y2="124.496" stroke="#EFEFEF"/>'
@@ -262,7 +263,7 @@ class TabFinetuneRouter(APIRouter):
         sanitize_run_id(run_id)
         home_path = os.path.join(env.DIR_LORAS, run_id)
         if not os.path.exists(home_path):
-            return Response("Run id '%s' not found" % home_path, status_code=404)
+            return Response(f"Run id '{home_path}' not found", status_code=404)
         shutil.rmtree(home_path)
         return JSONResponse("OK")
 

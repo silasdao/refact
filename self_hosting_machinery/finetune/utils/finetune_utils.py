@@ -49,10 +49,7 @@ def get_finetune_runs():
             # NOTE: every time we write status of any stage of filtering progress, we touch LORA_LOGDIR
             mtime = os.path.getmtime(dir_path)
             if mtime + 300 < time.time():
-                if d["status"] in ["preparing"]:
-                    d["status"] = "interrupted"
-                else:
-                    d["status"] = "failed"
+                d["status"] = "interrupted" if d["status"] in ["preparing"] else "failed"
         d["checkpoints"] = []
         checkpoints_dir = os.path.join(dir_path, "checkpoints")
         if os.path.isdir(checkpoints_dir):
@@ -99,7 +96,7 @@ def get_active_loras(models_db: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
 def get_finetune_filter_config(logger: Optional[Callable] = None):
     cfg = {**finetune_filtering_defaults}
     if os.path.exists(env.CONFIG_HOW_TO_FILTER):
-        logger("Reading %s" % env.CONFIG_HOW_TO_FILTER)
+        logger(f"Reading {env.CONFIG_HOW_TO_FILTER}")
         cfg.update(**json.load(open(env.CONFIG_HOW_TO_FILTER)))
     return cfg
 
@@ -108,7 +105,7 @@ def get_finetune_config(models_db: Dict[str, Any], logger: Optional[Callable] = 
     cfg = copy.deepcopy(finetune_train_defaults)
     if os.path.exists(env.CONFIG_FINETUNE):
         if logger is not None:
-            logger("Reading %s" % env.CONFIG_FINETUNE)
+            logger(f"Reading {env.CONFIG_FINETUNE}")
         cfg.update(**json.load(open(env.CONFIG_FINETUNE)))
     if cfg.get("model_name", None) not in models_db:
         cfg["model_name"] = default_finetune_model
@@ -172,10 +169,9 @@ def get_file_digest(file_path: Union[Path, str]) -> str:
 
     with open(file_path, 'rb') as file:
         while True:
-            # Reading is buffered, so we can read smaller chunks.
-            chunk = file.read(h.block_size)
-            if not chunk:
-                break
-            h.update(chunk)
+            if chunk := file.read(h.block_size):
+                h.update(chunk)
 
+            else:
+                break
     return h.hexdigest()

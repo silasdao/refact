@@ -76,4 +76,4 @@ def report_status(program, status):
         return
     if status == "interrupted":  # reported only by watchdog
         return
-    logging.info("STATUS %s" % (status))
+    logging.info(f"STATUS {status}")

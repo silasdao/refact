@@ -31,8 +31,9 @@ class FileSetsContext:
         train_files = list(jsonlines.open(TRAIN_UNFILTERED_FILEPATH))
         test_files = list(jsonlines.open(TEST_UNFILTERED_FILEPATH))
         train_min_number = (
-            self.TRAIN_FILES_MIN_NUMBER_WITH_TEST_SET if len(test_files) > 0 else
-            self.TRAIN_FILES_MIN_NUMBER_WITHOUT_TEST_SET
+            self.TRAIN_FILES_MIN_NUMBER_WITH_TEST_SET
+            if test_files
+            else self.TRAIN_FILES_MIN_NUMBER_WITHOUT_TEST_SET
         )
         if len(train_files) < train_min_number:
             raise RuntimeError(f"Provided train set is too small ({len(train_files)} files)\n"
@@ -81,10 +82,9 @@ class FileSetsContext:
                     "It is too little files to choose a test set from. "
                     "It's strongly recommended to choose a test set manually to be able to prevent overfitting"
                 )
-            else:
-                random.shuffle(files)
-                test_files = files[:test_files_count]
-                train_files = files[test_files_count:]
+            random.shuffle(files)
+            test_files = files[:test_files_count]
+            train_files = files[test_files_count:]
         else:
             train_files = files
             test_files = self.test_files

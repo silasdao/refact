@@ -37,7 +37,7 @@ class Packer:
         self.keys = keys
 
     def __iter__(self):
-        accum = {k: list() for k in self.keys}
+        accum = {k: [] for k in self.keys}
         stats: Dict[str, int] = {
             "packed_in": 0,
             "packed_out": 0,
@@ -51,10 +51,7 @@ class Packer:
             stats["pusher_resmem"] = psutil.Process().memory_info().rss / 1e9
             last_rec_stats.update(stats)
             accum_cut = {k: v[:self.n_ctx] for k, v in accum.items()}
-            emit = {
-                "stats": {**last_rec_stats, **stats},
-                **accum_cut,
-            }
+            emit = {"stats": last_rec_stats | stats, **accum_cut}
             if self.pack_pad0:
                 for k in self.keys:
                     if k == "tokens":
@@ -231,7 +228,7 @@ class DensePacker:
         else:
             lengths = [self.__item_len(i) for i in self.buffer]
             lengths = [l for l in lengths if l <= budget]
-            if len(lengths) == 0:
+            if not lengths:
                 return []
             # we can up-weight `old` items later
             bins = binpacking.to_constant_volume(lengths, budget)
@@ -249,7 +246,7 @@ class DensePacker:
             items_acc: List[ItemT],
             random_order: bool
     ) -> ItemT:
-        assert len(items_acc) > 0
+        assert items_acc
 
         if random_order:
             self.random.shuffle(items_acc)

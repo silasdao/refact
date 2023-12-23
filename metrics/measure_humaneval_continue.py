@@ -16,16 +16,19 @@ MAX_TOKENS = 256
 
 
 def run_completion_call(src_txt):
-    res = requests.post(f"http://127.0.0.1:8008/v1/completions", json={
-        "model": MODEL,
-        "max_tokens": MAX_TOKENS,
-        "stream": False,
-        "echo": True,
-        "top_p": TOP_P,
-        "temperature": TEMPERATURE,
-        "prompt": src_txt,
-        "stop": ["\n\n\n"],
-    })
+    res = requests.post(
+        "http://127.0.0.1:8008/v1/completions",
+        json={
+            "model": MODEL,
+            "max_tokens": MAX_TOKENS,
+            "stream": False,
+            "echo": True,
+            "top_p": TOP_P,
+            "temperature": TEMPERATURE,
+            "prompt": src_txt,
+            "stop": ["\n\n\n"],
+        },
+    )
     res.raise_for_status()
     j = res.json()
     # print(j)
@@ -57,9 +60,7 @@ def test_by_continuing(comm, case):
 
 
 if __name__ == "__main__":
-    postfix = ""
-    if len(sys.argv) > 1:
-        postfix = sys.argv[1]
+    postfix = sys.argv[1] if len(sys.argv) > 1 else ""
     t0 = time.time()
     from human_eval.data import write_jsonl, read_problems
     from human_eval.data import read_problems
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     tmp = comm.gather(output, root=0)
     if comm.rank == 0:
         all_output = [x for y in tmp for x in y]
-        output_name = "human-%s%s.jsonl" % ("continue", postfix)
+        output_name = f"human-continue{postfix}.jsonl"
         write_jsonl(output_name, all_output)
         res = subprocess.check_output(f"evaluate_functional_correctness {output_name}", shell=True)
         metrics = json.loads(res.decode('utf-8').strip().split('\n')[-1].replace("'", '"'))

@@ -23,11 +23,10 @@ class HumanEvalContinuation:
                 i = completion.find(stop)
                 assert i != -1
                 completion = completion[:i]
-        ret = {
+        return {
             "completion": completion,
             "tokens_with_completion": [int(t) for t in tokens_with_completion],
         }
-        return ret
 
     def __iter__(self):
         for ex in self.inner_filter:

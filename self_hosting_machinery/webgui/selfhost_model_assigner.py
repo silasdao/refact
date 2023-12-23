@@ -30,7 +30,7 @@ class ModelGroup:
     def gpus_shard(self) -> int:
         if not self.model_assign:
             return 0
-        return max([rec["gpus_shard"] for rec in self.model_assign.values()])
+        return max(rec["gpus_shard"] for rec in self.model_assign.values())
 
 
 class ModelAssigner:
@@ -72,9 +72,9 @@ class ModelAssigner:
         inference_config = self._model_inference_setup(inference_config)
         inference_config = self._integrations_inference_setup(inference_config)
 
-        with open(env.CONFIG_INFERENCE + ".tmp", "w") as f:
+        with open(f"{env.CONFIG_INFERENCE}.tmp", "w") as f:
             json.dump(inference_config, f, indent=4)
-        os.rename(env.CONFIG_INFERENCE + ".tmp", env.CONFIG_INFERENCE)
+        os.rename(f"{env.CONFIG_INFERENCE}.tmp", env.CONFIG_INFERENCE)
 
     def _model_assign_filter(self, inference_config: Dict[str, Any]) -> Dict[str, Any]:
         inference_config["model_assign"] = {
@@ -105,7 +105,7 @@ class ModelAssigner:
                     cfg_out = f"model-{model_name.lower().replace('/', '-')}-{idx}.cfg"
                     allowed_to_exist.append(cfg_out)
                     fn = os.path.join(env.DIR_WATCHDOG_D, cfg_out)
-                    with open(fn + ".tmp", "w") as f:
+                    with open(f"{fn}.tmp", "w") as f:
                         model_cfg_j = copy.deepcopy(model_cfg_template)
                         model_cfg_j["command_line"].append("--model")
                         model_cfg_j["command_line"].append(model_name)
@@ -113,7 +113,7 @@ class ModelAssigner:
                         model_cfg_j["share_gpu"] = assignment.get("share_gpu", False)
                         del model_cfg_j["unfinished"]
                         json.dump(model_cfg_j, f, indent=4)
-                    os.rename(fn + ".tmp", fn)
+                    os.rename(f"{fn}.tmp", fn)
             for _ in range(model_group.gpus_shard()):
                 if gpus[cursor]["mem_total_mb"] < model_group.required_memory_mb(self.models_db):
                     required_memory_exceed_available = True
@@ -148,9 +148,9 @@ class ModelAssigner:
             cfg.pop('unfinished')
             cfg['command_line'].append('--openai_key')
             cfg['command_line'].append(openai_api_key)
-            with open(openai_watchdog_cfg_fn + ".tmp", "w") as f:
+            with open(f"{openai_watchdog_cfg_fn}.tmp", "w") as f:
                 json.dump(cfg, f, indent=4)
-            os.rename(openai_watchdog_cfg_fn + ".tmp", openai_watchdog_cfg_fn)
+            os.rename(f"{openai_watchdog_cfg_fn}.tmp", openai_watchdog_cfg_fn)
         else:
             try:
                 os.unlink(openai_watchdog_cfg_fn)
@@ -225,16 +225,21 @@ class ModelAssigner:
                         "run": active_loras[k]["specific_lora_run_id"],
                         "checkpoint": active_loras[k]["specific_checkpoint"],
                     }
-            info.append({
-                "name": k,
-                "backend": rec["backend"],
-                "finetune_info": finetune_info,
-                "has_completion": bool("completion" in rec["filter_caps"]),
-                "has_finetune": bool("finetune" in rec["filter_caps"]),
-                "has_toolbox": bool(toolbox_caps.intersection(rec["filter_caps"])),
-                "has_chat": bool(rec["chat_scratchpad_class"]) and bool(chat_caps.intersection(rec["filter_caps"])),
-                "has_sharding": rec["backend"] in ["transformers"],
-            })
+            info.append(
+                {
+                    "name": k,
+                    "backend": rec["backend"],
+                    "finetune_info": finetune_info,
+                    "has_completion": "completion" in rec["filter_caps"],
+                    "has_finetune": "finetune" in rec["filter_caps"],
+                    "has_toolbox": bool(
+                        toolbox_caps.intersection(rec["filter_caps"])
+                    ),
+                    "has_chat": bool(rec["chat_scratchpad_class"])
+                    and bool(chat_caps.intersection(rec["filter_caps"])),
+                    "has_sharding": rec["backend"] in ["transformers"],
+                }
+            )
         return {"models": info}
 
     @property

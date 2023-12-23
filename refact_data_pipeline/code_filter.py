@@ -53,9 +53,7 @@ class TheStackFilter:
         # ngrams frequency filter
         def _top_n_gram_frequency(words: List[str], n: int) -> float:
             shingles_counter = Counter(map(tuple, shingleseqs_list(words, klist=[n])[0]))
-            if shingles_counter:
-                return max(shingles_counter.values()) / len(words)
-            return 0
+            return max(shingles_counter.values()) / len(words) if shingles_counter else 0
 
         for n, freq in [(2, 0.2), (3, 0.18), (4, 0.16)]:
             if _top_n_gram_frequency(words, n) > freq:
