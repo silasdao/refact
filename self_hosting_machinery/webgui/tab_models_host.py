@@ -44,11 +44,13 @@ class TabHostRouter(APIRouter):
         validated = post.dict()
         current_completion_model = validated.get("completion", "")
         if not current_completion_model or current_completion_model not in post.model_assign:
-            for info in self._model_assigner.models_info["models"]:
-                if info["has_completion"] and info["name"] in post.model_assign:
-                    validated["completion"] = info["name"]
-                    break
-            else:
-                validated["completion"] = ""
+            validated["completion"] = next(
+                (
+                    info["name"]
+                    for info in self._model_assigner.models_info["models"]
+                    if info["has_completion"] and info["name"] in post.model_assign
+                ),
+                "",
+            )
         self._model_assigner.models_to_watchdog_configs(validated)
         return JSONResponse("OK")

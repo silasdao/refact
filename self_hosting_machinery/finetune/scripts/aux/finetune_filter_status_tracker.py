@@ -33,9 +33,12 @@ class FinetuneFilterStatusTracker:
         self._tracker_extra_kwargs: Dict[str, Any] = dict()
 
     def dump(self):
-        with open(env.CONFIG_FINETUNE_FILTER_STAT + ".tmp", "w") as f:
+        with open(f"{env.CONFIG_FINETUNE_FILTER_STAT}.tmp", "w") as f:
             json.dump(self._stats_dict, f, indent=4)
-        os.rename(env.CONFIG_FINETUNE_FILTER_STAT + ".tmp", env.CONFIG_FINETUNE_FILTER_STAT)
+        os.rename(
+            f"{env.CONFIG_FINETUNE_FILTER_STAT}.tmp",
+            env.CONFIG_FINETUNE_FILTER_STAT,
+        )
 
     def update_status(
             self,

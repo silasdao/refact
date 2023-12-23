@@ -40,9 +40,9 @@ class TabSettingsRouter(APIRouter):
         return JSONResponse(config)
 
     async def _tab_settings_integrations_save(self, data: Integrations):
-        with open(env.CONFIG_INTEGRATIONS + ".tmp", "w") as f:
+        with open(f"{env.CONFIG_INTEGRATIONS}.tmp", "w") as f:
             json.dump(data.dict(), f, indent=4)
-        os.rename(env.CONFIG_INTEGRATIONS + ".tmp", env.CONFIG_INTEGRATIONS)
+        os.rename(f"{env.CONFIG_INTEGRATIONS}.tmp", env.CONFIG_INTEGRATIONS)
         self._models_assigner.models_to_watchdog_configs()
         return JSONResponse("OK")
 

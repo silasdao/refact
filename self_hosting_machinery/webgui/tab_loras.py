@@ -68,10 +68,13 @@ class TabLorasRouter(APIRouter):
     async def _upload_lora(self, file: UploadFile):
         async def write_to_file() -> JSONResponse:
             upload_dest = env.DIR_LORAS
-            tmp_path = os.path.join(upload_dest, file.filename + ".tmp")
+            tmp_path = os.path.join(upload_dest, f"{file.filename}.tmp")
             file_path = os.path.join(upload_dest, file.filename)
             if os.path.exists(file_path):
-                return JSONResponse({"detail": f"File with this name already exists"}, status_code=409)
+                return JSONResponse(
+                    {"detail": "File with this name already exists"},
+                    status_code=409,
+                )
             try:
                 with open(tmp_path, "wb") as f:
                     while True:
@@ -81,7 +84,7 @@ class TabLorasRouter(APIRouter):
                 os.rename(tmp_path, file_path)
                 return JSONResponse("OK", status_code=200)
             except OSError as e:
-                log("Error while uploading file: %s" % (e or str(type(e))))
+                log(f"Error while uploading file: {e or str(type(e))}")
                 return JSONResponse({"detail": "Cannot upload file, see logs for details"}, status_code=500)
             finally:
                 if os.path.exists(tmp_path):
@@ -107,9 +110,7 @@ class TabLorasRouter(APIRouter):
 
         resp = await unpack(Path(file_path))
         rm(file_path)
-        if resp.status_code != 200:
-            return resp
-        return JSONResponse("OK", status_code=200)
+        return resp if resp.status_code != 200 else JSONResponse("OK", status_code=200)
 
     async def _download_lora(self,
                              run_id: str = Query(default=Required),
@@ -153,7 +154,7 @@ class TabLorasRouter(APIRouter):
 
             except BaseException as e:
                 rm(str(tempdir))
-                err_msg = "Error while downloading: %s" % (e or str(type(e)))
+                err_msg = f"Error while downloading: {e or str(type(e))}"
                 log(err_msg)
                 raise HTTPException(detail=err_msg, status_code=500)
 

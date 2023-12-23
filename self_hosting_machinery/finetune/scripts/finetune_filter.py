@@ -35,7 +35,7 @@ def force_include_exclude_filter(
         "filetypes_db": {}
     }
     if os.path.exists(env.CONFIG_HOW_TO_FILETYPES):
-        _log_everywhere("Reading %s" % env.CONFIG_HOW_TO_FILETYPES)
+        _log_everywhere(f"Reading {env.CONFIG_HOW_TO_FILETYPES}")
         with open(env.CONFIG_HOW_TO_FILETYPES, "r") as f:
             fcfg.update(**json.load(f))
 
@@ -75,7 +75,7 @@ def loss_based_filter(
             if not (math.isnan(loss) or math.isinf(loss)):
                 file_losses.append(loss)
 
-        if len(file_losses) == 0:
+        if not file_losses:
             raise Exception("small file")
 
         return sum(file_losses) / len(file_losses)

@@ -37,11 +37,7 @@ def _shared_pointers(tensors):
     ptrs = defaultdict(list)
     for k, v in tensors.items():
         ptrs[v.data_ptr()].append(k)
-    failing = []
-    for ptr, names in ptrs.items():
-        if len(names) > 1:
-            failing.append(names)
-    return failing
+    return [names for names in ptrs.values() if len(names) > 1]
 
 
 class ModelContext:
@@ -130,10 +126,10 @@ class ModelContext:
         LoraMixin.apply_lora(
             model.to(device),
             lora_target_modules=lora_target_modules,
-            lora_r=int(lora_r),
+            lora_r=lora_r,
             lora_alpha=lora_alpha,
             lora_dropout=lora_dropout,
-            lora_init_scale=lora_init_scale
+            lora_init_scale=lora_init_scale,
         )
         self._freeze_model(
             model,
@@ -150,13 +146,12 @@ class ModelContext:
             self,
             input: torch.Tensor
     ) -> torch.Tensor:
-        logits = self.model.forward(
+        return self.model.forward(
             input,
             return_dict=False,
             output_attentions=False,
-            output_hidden_states=False
+            output_hidden_states=False,
         )[0]
-        return logits
 
     def loss(
             self,
@@ -164,12 +159,11 @@ class ModelContext:
             labels: torch.Tensor,
             mask: torch.Tensor
     ) -> torch.Tensor:
-        loss = self.loss_fn(
+        return self.loss_fn(
             logits=logits,
             labels=labels,
             mask=mask,
         )
-        return loss
 
     def backward(
             self, loss: torch.Tensor
@@ -180,12 +174,11 @@ class ModelContext:
         except torch.cuda.OutOfMemoryError as e:
             if self.low_gpu_mem_mode:
                 raise e
-            else:
-                self.model.optimizer.zero_grad()
-                torch.cuda.empty_cache()
-                self._set_low_gpu_mode(low_gpu_mode=True)
-                traces.log("switching to low GPU memory mode")
-                self.backward(loss)
+            self.model.optimizer.zero_grad()
+            torch.cuda.empty_cache()
+            self._set_low_gpu_mode(low_gpu_mode=True)
+            traces.log("switching to low GPU memory mode")
+            self.backward(loss)
 
     def step(self):
         assert self.use_deepspeed
@@ -243,7 +236,7 @@ class ModelContext:
             freeze_exceptions: List[str]
     ):
         for name, p in model.named_parameters(remove_duplicate=False):
-            if any([e in name for e in freeze_exceptions]):
+            if any(e in name for e in freeze_exceptions):
                 p.requires_grad_(True)
             else:
                 p.requires_grad_(False)

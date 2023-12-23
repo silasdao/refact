@@ -16,10 +16,14 @@ def modload(import_str):
 
 
 def find_param_by_name(model: torch.nn.Module, name: str):
-    for n, param in model.named_parameters(remove_duplicate=False):
-        if name in n:
-            return param
-    return None
+    return next(
+        (
+            param
+            for n, param in model.named_parameters(remove_duplicate=False)
+            if name in n
+        ),
+        None,
+    )
 
 
 class InferenceBase:

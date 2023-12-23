@@ -75,7 +75,7 @@ class LoraLoaderMixin:
             self.load_embeddings()
             self._lora_on = False
         elif not self._lora_on and on:
-            log("activating lora %s" % lora_checkpoint_dir)
+            log(f"activating lora {lora_checkpoint_dir}")
             self.load_checkpoint(lora_checkpoint_dir, reinstall_lora=True)
             self._lora_checkpoint_dir = lora_checkpoint_dir
             self._lora_on = True
@@ -83,7 +83,7 @@ class LoraLoaderMixin:
             try:
                 self.load_checkpoint(lora_checkpoint_dir, reinstall_lora=False)
             except RuntimeError as e:
-                log("failed to quick load lora checkpoint: %s" % e)
+                log(f"failed to quick load lora checkpoint: {e}")
                 log("will try to remove lora and add again")
                 LoraMixin.exclude_lora(self.model)
                 self._lora_checkpoint_dir = ""
@@ -92,7 +92,7 @@ class LoraLoaderMixin:
                 self._lora_checkpoint_dir = lora_checkpoint_dir
                 self._lora_on = True
         if lora_checkpoint_dir:
-            log("using lora %s" % lora_checkpoint_dir)
+            log(f"using lora {lora_checkpoint_dir}")
 
     def lora_switch_according_to_config(self):
         if "finetune" not in self.model_dict.get("filter_caps", []):
@@ -132,7 +132,7 @@ class LoraLoaderMixin:
             reinstall_lora: bool = False
     ):
         load_cp_paths = [p for p in Path(load_path).iterdir() if p.suffix in {".pt", ".pth", ".safetensors"}]
-        if len(load_cp_paths) == 0:
+        if not load_cp_paths:
             raise FileNotFoundError(f"No checkpoint found in {load_path}")
 
         finetune_cps = [_load_filename(p) for p in load_cp_paths]

@@ -46,10 +46,7 @@ def masked_loss(
         import termcolor
         def token_str(x, cond, color):
             t = "\"" + enc.decode([x]).replace("\n", "\\n") + "\""
-            if cond:
-                return termcolor.colored(t, color)
-            else:
-                return t
+            return termcolor.colored(t, color) if cond else t
 
         with torch.no_grad():
             b = 0
@@ -70,7 +67,7 @@ def masked_loss(
                                                     "red"),
                 ]))
         debug_dump.append("-- (ce * mask).sum(dim=1) = %s" % (ce * mask).sum(dim=1))
-        debug_dump.append("-- avg_mask_sum = %s" % avg_mask_sum)
+        debug_dump.append(f"-- avg_mask_sum = {avg_mask_sum}")
         debug_dump.append("-- this example loss_ce = %5.3f" % loss_ce.item())
 
     return loss_ce

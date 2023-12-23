@@ -237,10 +237,9 @@ def main(models_db: Dict[str, Any]):
             status_tracker=status_tracker
         )
 
-        _log_everywhere("finished finetune at %s" % traces.context().path)
+        _log_everywhere(f"finished finetune at {traces.context().path}")
         status_tracker.update_status("finished")
 
-    # finetune_sequence relies on exit code to continue or stop
     except (SystemExit, KeyboardInterrupt):
         # caught sigusr1, interrupt by watchdog or by user
         # this has to be there, even if catch_sigusr1() already called exit with 99, otherwise exit code is zero

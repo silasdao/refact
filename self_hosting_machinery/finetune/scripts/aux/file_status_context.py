@@ -54,11 +54,8 @@ class FilesStatusContext:
             f.hash(): f for f in self.file_statuses.values() if f.is_train
         }
         train_hashes = set(train_hashes_dict.keys())
-        test_hashes = set(
-            f.hash() for f in self.file_statuses.values() if not f.is_train
-        )
-        inters = train_hashes.intersection(test_hashes)
-        if len(inters) > 0:
+        test_hashes = {f.hash() for f in self.file_statuses.values() if not f.is_train}
+        if inters := train_hashes.intersection(test_hashes):
             paths = [train_hashes_dict[h].path for h in inters]
             raise RuntimeError(f"Provided similar files in train and test set: {paths}")
 

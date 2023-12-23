@@ -28,5 +28,5 @@ if __name__ == "__main__":
         if not filter_only:
             subprocess.check_call([sys.executable, "-m", "self_hosting_machinery.finetune.scripts.finetune_train"])
     except subprocess.CalledProcessError as e:
-        print("finetune_sequence: %s" % e)
+        print(f"finetune_sequence: {e}")
         sys.exit(1)

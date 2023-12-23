@@ -81,7 +81,9 @@ class DatasetOpts:
 
     def assert_all_used(self):
         unused = set(self.opts.keys()) - self.used
-        assert not unused, "DatasetOpts has unused data processing options %s" % str(unused)
+        assert (
+            not unused
+        ), f"DatasetOpts has unused data processing options {str(unused)}"
 
     def __repr__(self):
         return json.dumps(self.opts)

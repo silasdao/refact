@@ -78,17 +78,17 @@ def get_install_requires(packages):
     return install_requires
 
 
-if setup_package is not None:
-    if setup_package not in all_refact_packages:
-        raise ValueError(f"Package {setup_package} not found in repo")
+if setup_package is None:
+    setup_packages = all_refact_packages
+
+elif setup_package not in all_refact_packages:
+    raise ValueError(f"Package {setup_package} not found in repo")
+else:
     setup_packages = {
         name: py_package
         for name, py_package in all_refact_packages.items()
         if name in find_required_packages({setup_package})
     }
-else:
-    setup_packages = all_refact_packages
-
 setup(
     name="refact-self-hosting",
     version="1.1.0",

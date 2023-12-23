@@ -21,12 +21,12 @@ NODE_TYPES = {
 # comment extraction
 def get_comments(s, clean=False):
     "Returns a string including all comments in python code"
-    coments = []
     g = tokenize.generate_tokens(StringIO(s).readline)
-    for toknum, tokval, _, _, _ in g:
-        # print(toknum,tokval)
-        if toknum == tokenize.COMMENT:
-            coments.append((toknum, tokval))
+    coments = [
+        (toknum, tokval)
+        for toknum, tokval, _, _, _ in g
+        if toknum == tokenize.COMMENT
+    ]
     result = tokenize.untokenize(coments)
     if clean:
         result = result.replace("#", "")
@@ -106,22 +106,18 @@ def comment_size(text, language):
     """
     lexer = get_lexer_by_name(language)
     tokens = pygments.lex(text, lexer)
-    comment_len = 0
-    for token_type, token in tokens:
-        if (
-            token_type == pygments.token.Comment.Multiline
-            or token_type == pygments.token.Comment.Single
-            or token_type == pygments.token.Literal.String.Doc
-        ):
-            comment_len += len(token)  # token is a string with the comment contents
-    return comment_len
+    return sum(
+        len(token)
+        for token_type, token in tokens
+        if token_type
+        in [
+            pygments.token.Comment.Multiline,
+            pygments.token.Comment.Single,
+            pygments.token.Literal.String.Doc,
+        ]
+    )
 
 
 def get_nl_ratio(text, language):
     """get the ratio of comments to code in a program"""
-    # if language == "python":
-    #     comments = get_text_python(text)
-    #     ratio = len(comments) / len(text)
-    # else:
-    ratio = comment_size(text, language) / len(text)
-    return ratio
+    return comment_size(text, language) / len(text)

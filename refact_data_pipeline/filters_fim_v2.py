@@ -44,9 +44,7 @@ def _random_trim_context(
     cursor_2 = random.choice(lines_indexes, p=p2)
     cursor_1, cursor_2 = sorted((cursor_1, cursor_2))
     lines = lines[cursor_1:cursor_2]
-    if len(lines) < min_rows:
-        return text
-    return "".join(lines)
+    return text if len(lines) < min_rows else "".join(lines)
 
 
 class InsideSingleRow:
@@ -134,19 +132,14 @@ class MiddleToEndMultipleRows:
         def _get_n_extra_rows_by_block(selected_row_idx) -> Optional[int]:
             low, high = selected_row_idx + 1, -1 if is_cut_file else len(lines)
             dist = next((idx for idx, line in enumerate(lines[low:high]) if self._is_empty_fn.match(line)), None)
-            if dist is None or dist > self._max_rows_to_block_end:
-                return None
-            return dist + 1
+            return None if dist is None or dist > self._max_rows_to_block_end else dist + 1
 
         def _get_n_extra_rows(selected_row_idx) -> Optional[int]:
             low, high = 1, len(lines) - selected_row_idx - (1 if is_cut_file else 0)
             if high <= low:
                 return None
             n_extra_lines = min(self._max_rows_to_block_end, self._random.randint(low, high))
-            if n_extra_lines == 0:
-                return 0
-            else:
-                return n_extra_lines
+            return 0 if n_extra_lines == 0 else n_extra_lines
 
         retries = self._retries
         while retries:

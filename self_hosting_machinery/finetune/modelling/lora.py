@@ -14,11 +14,7 @@ def inject_to_module(
 ):
     sub_paths = inject_path.split('.')
     for p in sub_paths[:-1]:
-        if p.isnumeric():
-            base_module = base_module[int(p)]
-        else:
-            base_module = getattr(base_module, p)
-
+        base_module = base_module[int(p)] if p.isnumeric() else getattr(base_module, p)
     if sub_paths[-1].isnumeric():
         base_module[int(sub_paths[-1])] = injecting_module
     else:

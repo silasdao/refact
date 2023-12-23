@@ -50,13 +50,12 @@ class Chat2023Q2:
         first = [1] + [0] * (len(pack.r) - 1)
         assert len(pack.r) == len(first)
         assert len(pack.r) == len(pack.m)
-        emit = {
+        return {
             "tokens": pack.r,
             "mask": pack.m,
             "first": first,
-            "stats": {**odm["stats"], **stats}
+            "stats": {**odm["stats"], **stats},
         }
-        return emit
 
     def _pack_plain(self, plan: List[MsgElement], odm: Dict, stats: Dict):
         system_dict = [
@@ -75,13 +74,13 @@ class Chat2023Q2:
         ]
         text = ""
         for p in plan:
-            if p.msg_role == "SYSTEM":
+            if p.msg_role == "ASSISTANT":
+                text += f"{self.random.choice(assistant_dict).format(message=p.msg_text)}"
+
+            elif p.msg_role == "SYSTEM":
                 text += f"{self.random.choice(system_dict).format(message=p.msg_text)}\n"
             elif p.msg_role == "USER":
                 text += f"{self.random.choice(user_dict).format(message=p.msg_text)}\n"
-            elif p.msg_role == "ASSISTANT":
-                text += f"{self.random.choice(assistant_dict).format(message=p.msg_text)}"
-
         if self.debug:
             print(f'Chat2023Q2:\n{text}\n\n')
 
@@ -90,13 +89,12 @@ class Chat2023Q2:
         else:
             tokens = self.enc.encode(text)
         tokens += [self.enc.EOT]
-        emit = {
+        return {
             "tokens": tokens,
             "mask": [1] * len(tokens),
             "first": [1] + [0] * (len(tokens) - 1),
-            "stats": stats
+            "stats": stats,
         }
-        return emit
 
     def __iter__(self):
         stats: Dict[str, int] = {
